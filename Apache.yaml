@@ -1,0 +1,43 @@
+---
+- name: Lamp
+  hosts: ubuntu
+  become: yes
+
+  tasks:
+
+
+    - name: Install prerequisites
+      apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes
+      loop: [ 'aptitude' ]
+
+ 
+    - name: Install Apache and PHP Packages
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'apache2', 'php', 'php-mysql', 'libapache2-mod-php' ]
+     
+    - name: Removing old html directory from var
+      file:
+        path: /var/www/html/index.html
+        state: absent
+
+    - name: Copy new webpage
+      copy:
+        src: index.html
+        dest: /var/www/html
+
+
+    - name: "UFW - Allow HTTP on port 80"
+      ufw:
+        rule: allow
+        port: 80
+        proto: tcp 
+
+    - name: Reload Apache
+      service:
+        name: apache2
+        state: reloaded
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
